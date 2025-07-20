@@ -2,8 +2,6 @@ import random
 import socket
 import struct
 
-from stun import parse_mapped_or_xor_address
-
 
 class StunServer:
     MAGIC_COOKIE = 0x2112A442
@@ -11,6 +9,9 @@ class StunServer:
     def __init__(self, host, port=3478):
         self.host = host
         self.port = port
+
+    def __str__(self):
+        return f'{self.host}:{self.port}'
 
     def build_request(self, change_ip=False, change_port=False) -> tuple[bytes, bytes]:
         """
@@ -37,7 +38,7 @@ class StunServer:
                 dst = (ip, self.port)
                 sock.sendto(request, dst)
                 return ip, sock.recvfrom(2048)
-        except TimeoutError as e:
+        except (TimeoutError, socket.gaierror, ConnectionResetError, OSError) as e:
             print(e)
             return '', (b'', ('', -1))
 
@@ -53,61 +54,70 @@ class StunServer:
             raise ValueError("Transaction ID mismatch")
         offset = 20
         end = 20 + msg_length
+        attrs = []
         while offset + 4 <= len(data) and offset < end:
             attr_type, attr_len = struct.unpack('!HH', data[offset:offset + 4])
             offset += 4
-            # Check for MAPPED-ADDRESS
-            if attr_type == 0x0001 and attr_len >= 8:
-                # Skip reserved byte
-                family = data[offset]
-                port = struct.unpack('!H', data[offset + 2:offset + 4])[0]
-                ip = socket.inet_ntoa(data[offset + 4:offset + 8])
+            val = data[offset:offset + attr_len]
+            attrs.append((attr_type, val))
+            offset += attr_len + ((4 - (attr_len % 4)) % 4)
+
+        # 1) XOR-MAPPED-ADDRESS
+        for typ, val in attrs:
+            if typ == 0x0020 and len(val) >= 8:
+                port = struct.unpack("!H", val[2:4])[0] ^ (self.MAGIC_COOKIE >> 16)
+                xip = struct.unpack("!I", val[4:8])[0] ^ self.MAGIC_COOKIE
+                ip = socket.inet_ntoa(struct.pack("!I", xip))
                 return ip, port
-            # Move to next attribute (4-byte alignment)
-            offset += attr_len
-            if attr_len % 4:
-                offset += 4 - (attr_len % 4)
+
+        # 2) MAPPED-ADDRESS
+        for typ, val in attrs:
+            if typ == 0x0001 and len(val) >= 8:
+                port = struct.unpack("!H", val[2:4])[0]
+                ip = socket.inet_ntoa(val[4:8])
+                return ip, port
 
         raise ValueError("MAPPED-ADDRESS attribute not found")
 
-    def test(self, test_type: str, change_ip=False, change_port=False) -> bool:
+    def test(self, test_type: str) -> dict:
+        match test_type:
+            case 'direct':
+                change_ip = False
+                change_port = False
+            case 'port':
+                change_ip = False
+                change_port = True
+            case 'ip':
+                change_ip = True
+                change_port = False
+            case 'ip+port':
+                change_ip = True
+                change_port = True
+            case _:
+                raise ValueError(f"Unexpected test type: {test_type}")
         request, transaction_id = self.build_request(change_ip, change_port)
         ip, (data, host) = self.send_request(request)
         if not data:
-            return False
-        parsed = self.parse_response(data, transaction_id)
+            return {'result': False}
+        try:
+            parsed = self.parse_response(data, transaction_id)
+        except ValueError as e:
+            print(self.host, self.port, e)
+            return {'result': False}
         print(test_type, parsed, ip, host, end='')
         same_ip = host[0] == ip
         if change_ip and same_ip:
             print(' ip not changed!')
-            return False
+            return {'result': False}
         elif not change_ip and not same_ip:
             print(' ip changed!')
-            return False
+            return {'result': False}
         same_port = host[1] == self.port
         if change_port and same_port:
             print(' port not changed!')
-            return False
+            return {'result': False}
         elif not change_port and not same_port:
             print(' port changed!')
-            return False
+            return {'result': False}
         print()
-        return True
-
-    def full_test(self):
-        self.test('direct')
-        self.test('port', change_port=True)
-        self.test('ip', change_ip=True)
-        self.test('ip+port', change_ip=True, change_port=True)
-
-
-def main():
-    # StunServer('stun.1und1.de').full_test()
-    # StunServer('stun.bluesip.net').full_test()
-    # StunServer('stun.12connect.com').full_test()
-    # StunServer('stun.12voip.com').full_test()
-    StunServer('stun.counterpath.com').full_test()
-
-
-if __name__ == "__main__":
-    main()
+        return {'result': True, 'response_host': parsed[0], 'response_port': parsed[1]}
