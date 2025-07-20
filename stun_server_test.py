@@ -5,7 +5,9 @@ from stun_server import StunServer
 
 
 def is_link_ip(ip: str):
+    print('is_link_ip', ip)
     for entry in socket.getaddrinfo(socket.gethostname(), None, family=socket.AF_INET):
+        print(entry[4][0])
         if ip == entry[4][0]:
             return True
     return False
@@ -75,6 +77,7 @@ async def check_nat():
         print('Restricted cone NAT!')
     else:
         print('Restricted port NAT!')
+
 
 if __name__ == '__main__':
     asyncio.run(check_nat())
