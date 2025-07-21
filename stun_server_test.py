@@ -7,8 +7,8 @@ from stun_server import StunServer
 
 
 def is_link_ip_linux(ip_to_test: str):
-    print('is_link_ip_linux', ip_to_test)
     import fcntl
+    print('is_link_ip_linux', ip_to_test)
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     b = array.array('B', b'\0' * 5120)  # 128 Interfaces × 40 Bytes
     n = struct.unpack('iL', fcntl.ioctl(
@@ -19,17 +19,26 @@ def is_link_ip_linux(ip_to_test: str):
 
     for i in range(0, n, 40):
         ip = socket.inet_ntoa(d[i + 20:i + 24])
+        if ip.startswith('127.'):
+            continue
         print(ip)
         if ip == ip_to_test:
             return True
     return False
 
 
-def is_link_ip(ip: str):
-    print('is_link_ip', ip)
+def is_link_ip(ip_to_test: str):
+    try:
+        return is_link_ip_linux(ip_to_test)
+    except ImportError:
+        pass
+    print('is_link_ip', ip_to_test)
     for entry in socket.getaddrinfo(socket.gethostname(), None, family=socket.AF_INET):
-        print(entry[4][0])
-        if ip == entry[4][0]:
+        ip = entry[4][0]
+        if ip.startswith('127.'):
+            continue
+        print(ip)
+        if ip == ip_to_test:
             return True
     return False
 
@@ -74,7 +83,7 @@ async def check_nat():
     test2_s1 = StunServerTest(server1, 'ip+port')
     await asyncio.to_thread(test2_s1.test)
     print(test2_s1)
-    if is_link_ip_linux(test1_s1.response_host):
+    if is_link_ip(test1_s1.response_host):
         if test2_s1.result:
             print('Open Internet!')
         else:
