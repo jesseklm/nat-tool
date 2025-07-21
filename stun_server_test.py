@@ -48,12 +48,15 @@ class StunServerTest:
         self.server = server
         self.type = type
         self.result = False
+        self.response = {}
         self.response_host = None
         self.response_port = None
 
     def test(self):
         result = self.server.test(self.type)
         self.result = result['result']
+        if self.result:
+            self.response = result['response']
         self.response_host = result.get('response_host')
         self.response_port = result.get('response_port')
 
@@ -62,7 +65,8 @@ class StunServerTest:
             'server': self.server,
             'type': self.type,
             'result': self.result,
-            'response': f'{self.response_host}:{self.response_port}'
+            'response': f'{self.response_host}:{self.response_port}',
+            'local': f"{self.response.get('local_ip')}:{self.response.get('local_port')}",
         }
 
     def __str__(self):
@@ -75,39 +79,47 @@ async def check_nat():
 
     test1_s1 = StunServerTest(server1)
     await asyncio.to_thread(test1_s1.test)
-    print(test1_s1)
+    yield {'test': test1_s1}
     if not test1_s1.result:
-        print('UDP blocked!')
+        yield {'result': 'UDP blocked!'}
         return
 
     test2_s1 = StunServerTest(server1, 'ip+port')
     await asyncio.to_thread(test2_s1.test)
-    print(test2_s1)
+    yield {'test': test2_s1}
     if is_link_ip(test1_s1.response_host):
         if test2_s1.result:
-            print('Open Internet!')
+            yield {'result': 'Open Internet!'}
         else:
-            print('Symmetric Firewall!')
+            yield {'result': 'Symmetric Firewall!'}
         return
     if test2_s1.result:
-        print('NAT 1, Endpoint-Independent NAT, Full Cone NAT!')
+        yield {'result': 'NAT 1, Endpoint-Independent NAT, Full Cone NAT!'}
         return
 
     test1_s2 = StunServerTest(server2)
     await asyncio.to_thread(test1_s2.test)
-    print(test1_s2)
+    yield {'test': test1_s2}
     if test1_s1.response_host != test1_s2.response_host:
-        print('NAT 4, Symmetric NAT!')
+        yield {'result': 'NAT 4, Symmetric NAT!'}
         return
 
     test3_s1 = StunServerTest(server1, 'port')
     await asyncio.to_thread(test3_s1.test)
-    print(test3_s1)
+    yield {'test': test3_s1}
     if test3_s1.result:
-        print('NAT 2, Address-Dependent NAT, Restricted Cone NAT!')
+        yield {'result': 'NAT 2, Address-Dependent NAT, Restricted Cone NAT!'}
     else:
-        print('NAT 3, Address- and Port-Dependent NAT, Port Restricted Cone NAT!')
+        yield {'result': 'NAT 3, Address- and Port-Dependent NAT, Port Restricted Cone NAT!'}
+
+
+async def check_nat_console():
+    async for response in check_nat():
+        if 'result' in response:
+            print(response['result'])
+        if 'test' in response:
+            print(response['test'])
 
 
 if __name__ == '__main__':
-    asyncio.run(check_nat())
+    asyncio.run(check_nat_console())
