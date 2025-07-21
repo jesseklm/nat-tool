@@ -90,23 +90,23 @@ async def check_nat():
             print('Symmetric Firewall!')
         return
     if test2_s1.result:
-        print('Full-cone NAT!')
+        print('NAT 1, Endpoint-Independent NAT, Full Cone NAT!')
         return
 
     test1_s2 = StunServerTest(server2)
     await asyncio.to_thread(test1_s2.test)
     print(test1_s2)
     if test1_s1.response_host != test1_s2.response_host:
-        print('Symmetric NAT!')
+        print('NAT 4, Symmetric NAT!')
         return
 
     test3_s1 = StunServerTest(server1, 'port')
     await asyncio.to_thread(test3_s1.test)
     print(test3_s1)
     if test3_s1.result:
-        print('Restricted cone NAT!')
+        print('NAT 2, Address-Dependent NAT, Restricted Cone NAT!')
     else:
-        print('Restricted port NAT!')
+        print('NAT 3, Address- and Port-Dependent NAT, Port Restricted Cone NAT!')
 
 
 if __name__ == '__main__':

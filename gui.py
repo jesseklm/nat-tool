@@ -57,23 +57,23 @@ class MainWindow(Ui_MainWindow):
                 self.statusbar.showMessage('Symmetric Firewall!')
             return
         if test2_s1.result:
-            self.statusbar.showMessage('Full-cone NAT!')
+            self.statusbar.showMessage('NAT 1, Endpoint-Independent NAT, Full Cone NAT!')
             return
 
         test1_s2 = StunServerTest(server2)
         await asyncio.to_thread(test1_s2.test)
         self.add_row(test1_s2.get_dict())
         if test1_s1.response_host != test1_s2.response_host:
-            self.statusbar.showMessage('Symmetric NAT!')
+            self.statusbar.showMessage('NAT 4, Symmetric NAT!')
             return
 
         test3_s1 = StunServerTest(server1, 'port')
         await asyncio.to_thread(test3_s1.test)
         self.add_row(test3_s1.get_dict())
         if test3_s1.result:
-            self.statusbar.showMessage('Restricted cone NAT!')
+            self.statusbar.showMessage('NAT 2, Address-Dependent NAT, Restricted Cone NAT!')
         else:
-            self.statusbar.showMessage('Restricted port NAT!')
+            self.statusbar.showMessage('NAT 3, Address- and Port-Dependent NAT, Port Restricted Cone NAT!')
 
 
 if __name__ == "__main__":
