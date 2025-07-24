@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-      - run: pip install -r requirements.txt
+      - run: pip install --no-cache-dir --prefer-binary -r requirements.txt
       - uses: Nuitka/Nuitka-Action@v1.3
         with:
           script-name: gui.py
@@ -40,4 +40,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: exe
-          path: gui.dist/**
+          path: build/gui.dist/**
