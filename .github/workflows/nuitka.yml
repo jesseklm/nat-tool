@@ -19,25 +19,25 @@ jobs:
           script-name: gui.py
           msvc: latest
           mode: standalone
-          windows-console-mode: disable
-          nofollow-import-to: |
-            _asyncio
-            _bz2
-            _ctypes
-            _decimal
-            _hashlib
-            _lzma
-            _multiprocessing
-            _queue
-            _ssl
-            _wmi
-            pyexpat
+#          windows-console-mode: disable
+#          nofollow-import-to: |
+#            _asyncio
+#            _bz2
+#            _ctypes
+#            _decimal
+#            _hashlib
+#            _lzma
+#            _multiprocessing
+#            _queue
+#            _ssl
+#            _wmi
+#            pyexpat
           enable-plugins: pyside6
-          noinclude-qt-plugins: |
-            iconengines
-            imageformats
-            tls
+#          noinclude-qt-plugins: |
+#            iconengines
+#            imageformats
+#            tls
       - uses: actions/upload-artifact@v4
         with:
           name: exe
-          path: build/gui.dist/**
+          path: build/gui.dist/
