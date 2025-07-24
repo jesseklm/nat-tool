@@ -1,4 +1,4 @@
-name: Build Nuitka EXE
+name: build .exe
 
 on:
   push:
@@ -40,4 +40,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: exe
-          path: gui.exe
+          path: gui.dist/**
