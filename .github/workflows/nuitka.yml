@@ -20,6 +20,7 @@ jobs:
           script-name: gui.py
           msvc: latest
           mode: standalone
+          output-file: nat-tool.exe
           windows-console-mode: disable
           nofollow-import-to: |
             _asyncio
@@ -40,5 +41,5 @@ jobs:
             tls
       - uses: actions/upload-artifact@v4
         with:
-          name: exe
+          name: nat-tool
           path: build/gui.dist/
