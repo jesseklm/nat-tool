@@ -51,7 +51,7 @@ jobs:
           filename: nat-tool.zip
           path: build/gui.dist/
           type: 7z
-      - run: dir -s
+#      - run: dir -s
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: build/gui.dist/nat-tool.zip
+          artifacts: nat-tool.zip
