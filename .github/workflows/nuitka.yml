@@ -45,12 +45,12 @@ jobs:
 #        with:
 #          name: nat-tool
 #          path: build/gui.dist/
+      - run: cp LICENSE gui.dist/build/
       - uses: thedoctor0/zip-release@0.7.6
         with:
           filename: nat-tool.zip
-          path: ./gui.dist/
-          directory: build/
+          path: gui.dist/build/
           type: 7z
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: build/nat-tool.zip
+          artifacts: gui.dist/build/nat-tool.zip

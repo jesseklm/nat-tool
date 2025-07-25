@@ -4,8 +4,7 @@ import sys
 from PySide6 import QtAsyncio
 from PySide6.QtWidgets import QApplication, QMainWindow, QTableWidgetItem
 
-from stun_server import StunServer
-from stun_server_test import check_nat, is_link_ip, StunServerTest
+from stun_server_test import check_nat
 from ui.main import Ui_MainWindow
 
 
