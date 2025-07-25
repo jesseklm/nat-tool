@@ -39,7 +39,14 @@ jobs:
             iconengines
             imageformats
             tls
-      - uses: actions/upload-artifact@v4
+#      - uses: actions/upload-artifact@v4
+#        with:
+#          name: nat-tool
+#          path: build/gui.dist/
+      - uses: thedoctor0/zip-release@0.7.6
         with:
-          name: nat-tool
+          filename: nat-tool.zip
           path: build/gui.dist/
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: nat-tool.zip
