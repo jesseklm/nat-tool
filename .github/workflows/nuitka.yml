@@ -47,9 +47,10 @@ jobs:
 #          path: build/gui.dist/
       - uses: thedoctor0/zip-release@0.7.6
         with:
-          filename: nat-tool.7z
-          path: ./build/gui.dist/
-          type: 7z
+          filename: nat-tool.zip
+          path: ./gui.dist/
+          directory: build/
+          type: zip
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: nat-tool.7z
+          artifacts: build/nat-tool.zip
