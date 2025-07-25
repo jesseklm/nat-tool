@@ -52,4 +52,4 @@ jobs:
           type: 7z
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: nat-tool.zip
+          artifacts: nat-tool.7z
